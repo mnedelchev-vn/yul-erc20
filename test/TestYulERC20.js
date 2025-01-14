@@ -1,6 +1,5 @@
 const { ethers } = require("hardhat")
 const { expect } = require("chai");
-require("dotenv").config();
 
 describe("TestYulERC20", function () {
     let YulERC20;

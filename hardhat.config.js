@@ -17,13 +17,13 @@ module.exports = {
             forking: {
                 live: false,
                 saveDeployments: false,
-                accounts: [process.env.PRIVATE_KEY_OWNER, process.env.USER_PRIVATE_KEY],
+                accounts: [],
                 url: process.env.MAINNET_NODE || "https://rpc.ankr.com/eth"
             }
         }
 
     },
     mocha: {
-         timeout: 60000
+        timeout: 60000
     }
 };
