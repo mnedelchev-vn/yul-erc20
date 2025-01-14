@@ -1,7 +1,7 @@
 # YulERC20
     
 ### PURPOSE
-The following [smart contract](https://github.com/mnedelchev-vn/yul-erc20/tree/main/contracts/YulERC20.sol) represents a ERC20 token standard written entirely with Yul language. The idea is to dive deep into how memory and state locations work on a lower level inside Solidity. The following actions are performed in inline assembly:
+The following [smart contract](https://github.com/mnedelchev-vn/yul-erc20/tree/main/contracts/YulERC20.sol) represents a ERC20 token standard written entirely with Yul language. The idea is to dive deep into how memory and state locations work on a lower level inside the EVM. The following actions are performed in inline assembly:
 * math operations; `if` conditions with `eq()`, `lt()`, `gt()`; iterations with `for`
 * storing of a mapping value; storing of a mapping value inside another mapping
 * storing, caching, converting & returning state data directly in assembly
