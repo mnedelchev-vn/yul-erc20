@@ -2,55 +2,95 @@ const { ethers } = require("hardhat")
 const { expect } = require("chai");
 require("dotenv").config();
 
-async function impersonateAddress(address) {
-    await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [address],
-    });
-    const signer = await ethers.provider.getSigner(address);
-    signer.address = signer.address;
-    return signer;
-}
-
 describe("TestYulERC20", function () {
     let YulERC20;
+    const contractParams = {
+        name: 'Test Yul ERC20',
+        symbol: 'TSTYULERC20',
+        decimals: 18
+    };
     before(async function () {
         let signers = await ethers.getSigners();
-        console.log(signers, 'signers');
-        owner = signers[0];
-        user1 = signers[1];
-        user2 = signers[2];
+        user1 = signers[0];
+        user2 = signers[1];
 
         YulERC20 = await ethers.deployContract('contracts/YulERC20.sol:YulERC20', [
-            "Test Yul ERC20",
-            "TSTYULERC20",
-            ethers.parseUnits('1000', 18)
+            contractParams.name,
+            contractParams.symbol,
+            ethers.parseUnits('1000', contractParams.decimals)
+            
         ]);
         await YulERC20.waitForDeployment();
     });
 
-    it("Test state params", async function () {
-        console.log(await YulERC20.name(), 'name');
-        console.log(await YulERC20.symbol(), 'symbol');
-        console.log(await YulERC20.balanceOf(owner.address), 'balanceOf');
-        console.log(await YulERC20.totalSupply(), 'totalSupply');
-        return;
-        let tx = await YulERC20.setName("asdasd");
-        await tx.wait(1);
+    it("Test name()", async function () {
+        expect(removeNullBytes(await YulERC20.name())).to.eq(contractParams.name);
+    });
+
+    it("Test symbol()", async function () {
+        expect(removeNullBytes(await YulERC20.symbol())).to.eq(contractParams.symbol);
+    });
+
+    it("Test transfer", async function () {
+        const user1Balance = await YulERC20.balanceOf(user1.address);
+        const user2Balance = await YulERC20.balanceOf(user2.address);
+
+        const transferAmount = ethers.parseUnits('5', contractParams.decimals);
+        let tx = await YulERC20.connect(user1).transfer(user2.address, transferAmount);
+        await tx.wait();
+
+        const user1BalanceAfter = await YulERC20.balanceOf(user1.address);
+        const user2BalanceAfter = await YulERC20.balanceOf(user2.address);
+        expect(user1Balance).to.be.greaterThan(user1BalanceAfter);
+        expect(user1Balance).to.eq(user1BalanceAfter + transferAmount);
+        expect(user2BalanceAfter).to.be.greaterThan(user2Balance);
+        expect(user2BalanceAfter).to.eq(user2Balance + transferAmount);
+    });
+
+    it("Test approve", async function () {
+        const user2Allowance = await YulERC20.allowance(user1.address, user2.address);
+        const newApprove = user2Allowance + ethers.parseUnits('10', contractParams.decimals);
+
+        let tx = await YulERC20.connect(user1).approve(user2.address, newApprove);
+        await tx.wait();
+
+        const user2AllowanceAfter = await YulERC20.allowance(user1.address, user2.address);
+        expect(user2AllowanceAfter).to.be.greaterThan(user2Allowance);
+    });
+
+    it("Test transferFrom", async function () {
+        const user1Balance = await YulERC20.balanceOf(user1.address);
+        const user2Balance = await YulERC20.balanceOf(user2.address);
+        const allowance = await YulERC20.allowance(user1.address, user2.address);
+
+        const transferAmount = ethers.parseUnits('5', contractParams.decimals);
+        let tx = await YulERC20.connect(user2).transferFrom(user1.address, user2.address, transferAmount);
+        await tx.wait(); 
+
+        const allowanceAfter = await YulERC20.allowance(user1.address, user2.address);
+        const user1BalanceAfter = await YulERC20.balanceOf(user1.address);
+        const user2BalanceAfter = await YulERC20.balanceOf(user2.address);
+        expect(allowance).to.be.greaterThan(allowanceAfter);
+        expect(allowance).to.eq(allowanceAfter + transferAmount);
         
-        console.log(await ethers.provider.getStorage(YulERC20.target, 0), 'getStorage');
+        expect(user2BalanceAfter).to.be.greaterThan(user2Balance);
+        expect(user2BalanceAfter).to.eq(user2Balance + transferAmount);
+        expect(user1Balance).to.be.greaterThan(user1BalanceAfter);
+        expect(user1Balance).to.eq(user1BalanceAfter + transferAmount);
+    });
 
-        tx = await YulERC20.setName("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd");
-        await tx.wait(1);
-        console.log(await ethers.provider.getStorage(YulERC20.target, ethers.solidityPackedKeccak256(['uint256'], [0])), 'getStorage');
+    it("Test approval revoke", async function () {
+        const user2Allowance = await YulERC20.allowance(user1.address, user2.address);
 
-        console.log(await ethers.provider.getStorage(
-            YulERC20.target, 
-            BigInt(ethers.solidityPackedKeccak256(['uint256'], [0])) + 1n
-        ), 'getStorage');
+        let tx = await YulERC20.connect(user1).approve(user2.address, 0);
+        await tx.wait();
 
-        // rules to store a string in state:
-            // if size of string is lesser than 31 bytes then the string content and the length get stored inside the string base storage slot
-
+        const user2AllowanceAfter = await YulERC20.allowance(user1.address, user2.address);
+        expect(user2Allowance).to.be.greaterThan(user2AllowanceAfter);
+        expect(user2AllowanceAfter).to.eq(0);
     });
 });
+
+function removeNullBytes(str){
+    return str.split("").filter(char => char.codePointAt(0)).join("")
+}
