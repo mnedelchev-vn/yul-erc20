@@ -23,7 +23,7 @@ contract YulERC20 is IERC20 {
     error ERC20InvalidSpender(address spender); // 0x94280d62c347d8d9f4d59a76ea321452406db88df38e0c9da304f58b57b373a2
 
     constructor(string memory name_, string memory symbol_, uint256 mintedTokens) {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
 
             let nameLen := mload(name_)
@@ -103,7 +103,7 @@ contract YulERC20 is IERC20 {
     }
 
     function totalSupply() external view returns (uint256) {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
             mstore(currentMemoryPointer, sload(_totalSupply.slot))
 
@@ -115,7 +115,7 @@ contract YulERC20 is IERC20 {
     }
 
     function balanceOf(address account) external view returns (uint256) {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
 
             // copy balance from state to memory
@@ -132,7 +132,7 @@ contract YulERC20 is IERC20 {
     }
 
     function allowance(address owner, address spender) external view returns (uint256) {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
 
             // get the storage slot of the _allowances[owner] mapping
@@ -177,7 +177,7 @@ contract YulERC20 is IERC20 {
     }
 
     function _transfer(address from, address to, uint256 value) internal {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
             
             if iszero(from) {
@@ -245,7 +245,7 @@ contract YulERC20 is IERC20 {
     }
 
     function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual {
-        assembly {
+        assembly("memory-safe") {
             let currentMemoryPointer := mload(0x40)
             if iszero(owner) {
                 mstore(currentMemoryPointer, 0xe602df05cc75712490294c6c104ab7c17f4030363910a7a2626411c6d3118847)
