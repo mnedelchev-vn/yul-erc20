@@ -14,5 +14,5 @@ The following [smart contract](https://github.com/mnedelchev-vn/yul-erc20/tree/m
 
 ### Before starting make sure to create .env file at the root of the project containing the following data:
 ```
-    MAINNET_NODE=XYZ
+    RPC_NODE=XYZ
 ```

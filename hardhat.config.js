@@ -1,14 +1,20 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     solidity: "0.8.28",
     defaultNetwork: 'hardhat',
     solidity: {
         compilers: [
             {
-                version: '0.8.28'
+                version: '0.8.28',
+                settings: {
+                    viaIR: true,
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    }
+                }
             }
         ]
     },
@@ -18,10 +24,9 @@ module.exports = {
                 live: false,
                 saveDeployments: false,
                 accounts: [],
-                url: process.env.MAINNET_NODE || "https://rpc.ankr.com/eth"
+                url: process.env.RPC_NODE
             }
         }
-
     },
     mocha: {
         timeout: 60000
